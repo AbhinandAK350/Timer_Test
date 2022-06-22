@@ -1,10 +1,8 @@
 package com.ctrlroom.myapplication
 
 import android.annotation.SuppressLint
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.PendingIntent
-import android.app.Service
+import android.app.*
+import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.CountDownTimer
@@ -21,13 +19,17 @@ class TimerService: Service() {
 
     override fun onCreate() {
         super.onCreate()
-        setNotif()
-        EventBus.getDefault().register(this);
+        startForeground()
+        EventBus.getDefault().register(this)
+    }
+
+    private fun startForeground() {
+        startForeground(1, getMyActivityNotification(""))
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        EventBus.getDefault().unregister(this);
+        EventBus.getDefault().unregister(this)
     }
 
     @SuppressLint("WrongConstant")
@@ -50,7 +52,8 @@ class TimerService: Service() {
         }
     }
 
-    private fun setNotif() {
+    @SuppressLint("UnspecifiedImmutableFlag")
+    private fun getMyActivityNotification(text: String): Notification {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val serviceChannel = NotificationChannel(
                 "ch1",
@@ -62,21 +65,30 @@ class TimerService: Service() {
             )
             manager.createNotificationChannel(serviceChannel)
         }
+
         val notificationIntent = Intent(this, MainActivity::class.java)
         val pendingIntent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE)
+            PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_MUTABLE)
         } else {
             PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_ONE_SHOT)
         }
-        val notification = NotificationCompat.Builder(this, "ch1")
-            .setContentTitle("Timer")
-            .setContentText("Timer service is running")
+
+        return NotificationCompat.Builder(this,"my_channel_01")
+        .setContentTitle("Time remaining")
+            .setContentText(text)
+            .setOnlyAlertOnce(true)
+            .setOngoing(true)
             .setSmallIcon(R.drawable.ic_launcher_background)
             .setContentIntent(pendingIntent)
-            .setOngoing(true)
-            .setOnlyAlertOnce(true)
+            .setChannelId("ch1")
             .build()
-        startForeground(1, notification)
+    }
+
+    private fun updateNotification(text: String) {
+        val notification = getMyActivityNotification(text)
+        val mNotificationManager =
+            getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        mNotificationManager.notify(1, notification)
     }
 
     private fun startCount(timemillis: Long) {
@@ -97,6 +109,7 @@ class TimerService: Service() {
                     ))
                 )
 
+                updateNotification(cdown)
                 EventBus.getDefault().postSticky(MessageEvent(cdown))
             }
 
