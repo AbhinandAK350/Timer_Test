@@ -4,6 +4,8 @@
     package="com.ctrlroom.myapplication">
 
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
 
     <application
         android:allowBackup="false"
@@ -24,19 +26,8 @@
             </intent-filter>
         </activity>
 
-        <service android:name=".TimerService"
-            android:exported="false">
-            <intent-filter>
-                <action
-                    android:name="com.ctrlroom.myapplication.action.START" />
-                <action
-                    android:name="com.ctrlroom.myapplication.action.PAUSE" />
-                <action
-                    android:name="com.ctrlroom.myapplication.action.RESUME" />
-                <action
-                    android:name="com.ctrlroom.myapplication.action.STOP" />
-            </intent-filter>
-        </service>
+        <service android:name=".service.TimerService"
+            android:exported="false"/>
     </application>
 
 </manifest>

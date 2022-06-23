@@ -1,7 +1,6 @@
-package com.ctrlroom.myapplication
+package com.ctrlroom.myapplication.events
 
 class MessageEvent(s: String) {
-
 
     private var mMessage: String? = s
 

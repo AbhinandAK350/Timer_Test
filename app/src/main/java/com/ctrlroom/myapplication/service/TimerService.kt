@@ -1,16 +1,21 @@
-package com.ctrlroom.myapplication
+package com.ctrlroom.myapplication.service
 
 import android.annotation.SuppressLint
 import android.app.*
 import android.content.Context
 import android.content.Intent
-import android.os.Build
-import android.os.CountDownTimer
-import android.os.IBinder
+import android.os.*
+import android.widget.Toast
 import androidx.core.app.NotificationCompat
+import com.ctrlroom.myapplication.MainActivity
+import com.ctrlroom.myapplication.R
+import com.ctrlroom.myapplication.events.CounterEvents
+import com.ctrlroom.myapplication.events.MessageEvent
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
+import java.util.*
 import java.util.concurrent.TimeUnit
+
 
 class TimerService: Service() {
 
@@ -20,11 +25,23 @@ class TimerService: Service() {
     override fun onCreate() {
         super.onCreate()
         startForeground()
+        postToast()
+
         EventBus.getDefault().register(this)
     }
 
+    private fun postToast() {
+        Timer().scheduleAtFixedRate(object : TimerTask() {
+            override fun run() {
+                Handler(Looper.getMainLooper()).post(Runnable {
+                    Toast.makeText(applicationContext, "hi", Toast.LENGTH_SHORT).show()
+                })
+            }
+        }, 0, 10000)
+    }
+
     private fun startForeground() {
-        startForeground(1, getMyActivityNotification(""))
+        startForeground(1, setForegroundNotification(""))
     }
 
     override fun onDestroy() {
@@ -32,17 +49,10 @@ class TimerService: Service() {
         EventBus.getDefault().unregister(this)
     }
 
-    @SuppressLint("WrongConstant")
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        super.onStartCommand(intent, flags, startId)
-
-        return START_NOT_STICKY
-    }
-
     @Subscribe(sticky = true)
     fun onBtn(event: CounterEvents?) {
         if (event!!.getEventType() == "start") {
-            startCount(900000)
+            startCount(100000)
         } else if (event.getEventType() == "pause") {
             pauseCounter()
         } else if (event.getEventType() == "resume") {
@@ -53,7 +63,7 @@ class TimerService: Service() {
     }
 
     @SuppressLint("UnspecifiedImmutableFlag")
-    private fun getMyActivityNotification(text: String): Notification {
+    private fun setForegroundNotification(text: String): Notification {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val serviceChannel = NotificationChannel(
                 "ch1",
@@ -85,7 +95,7 @@ class TimerService: Service() {
     }
 
     private fun updateNotification(text: String) {
-        val notification = getMyActivityNotification(text)
+        val notification = setForegroundNotification(text)
         val mNotificationManager =
             getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         mNotificationManager.notify(1, notification)

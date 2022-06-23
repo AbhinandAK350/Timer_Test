@@ -6,6 +6,9 @@ import android.view.View
 import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import com.ctrlroom.myapplication.events.CounterEvents
+import com.ctrlroom.myapplication.events.MessageEvent
+import com.ctrlroom.myapplication.service.TimerService
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
@@ -79,7 +82,16 @@ class MainActivity : AppCompatActivity() {
 
     @Subscribe(sticky = true, threadMode = ThreadMode.MAIN)
     fun onEvent(event: MessageEvent?) {
-        textv!!.text = event!!.getMessage()
+        if (event!!.getMessage() == "Done") {
+            textv!!.text = "Done"
+            Pref.putString(this@MainActivity, "ssb", "stopped")
+            btn_pauseResume!!.visibility = View.GONE
+            btn_startStop!!.visibility = View.VISIBLE
+            btn_startStop!!.text = "Start"
+            stopService(Intent(this@MainActivity, TimerService::class.java))
+        } else {
+            textv!!.text = event.getMessage()
+        }
     }
 
     override fun onStart() {
