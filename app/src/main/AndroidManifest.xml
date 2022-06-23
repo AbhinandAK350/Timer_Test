@@ -3,6 +3,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.ctrlroom.myapplication">
 
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
@@ -26,7 +28,9 @@
             </intent-filter>
         </activity>
 
-        <service android:name=".service.TimerService"
+        <activity android:name=".SecondActivity"/>
+
+        <service android:name=".services.TimerService"
             android:exported="false"/>
     </application>
 

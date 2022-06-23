@@ -1,40 +1,48 @@
-package com.ctrlroom.myapplication.service
+package com.ctrlroom.myapplication.services
 
 import android.annotation.SuppressLint
 import android.app.*
 import android.content.Context
 import android.content.Intent
 import android.os.*
+import android.util.Log
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import com.ctrlroom.myapplication.MainActivity
 import com.ctrlroom.myapplication.R
+import com.ctrlroom.myapplication.utils.Util
 import com.ctrlroom.myapplication.events.CounterEvents
 import com.ctrlroom.myapplication.events.MessageEvent
+import com.ctrlroom.myapplication.events.NetworkEvent
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
+import org.json.JSONObject
 import java.util.*
 import java.util.concurrent.TimeUnit
 
-
 class TimerService: Service() {
 
+    private var timer: Timer? = null
     private var countDownTimer: CountDownTimer? = null
     var millis: Long = 0
 
     override fun onCreate() {
         super.onCreate()
+        Log.d("service_timer", "service created")
         startForeground()
         postToast()
-
         EventBus.getDefault().register(this)
     }
 
     private fun postToast() {
-        Timer().scheduleAtFixedRate(object : TimerTask() {
+        timer = Timer()
+        timer!!.scheduleAtFixedRate(object : TimerTask() {
             override fun run() {
                 Handler(Looper.getMainLooper()).post(Runnable {
-                    Toast.makeText(applicationContext, "hi", Toast.LENGTH_SHORT).show()
+                    val jobj = JSONObject()
+                    jobj.put("battery_percentage", Util.getBatteryLevel(applicationContext).toString())
+                    Util.writeToJson(applicationContext, jobj.toString())
+                    Toast.makeText(applicationContext, Util.getBatteryLevel(applicationContext).toString()+"%", Toast.LENGTH_SHORT).show()
                 })
             }
         }, 0, 10000)
@@ -46,11 +54,13 @@ class TimerService: Service() {
 
     override fun onDestroy() {
         super.onDestroy()
+        Log.d("service_timer", "service destroyed")
+        timer!!.cancel()
         EventBus.getDefault().unregister(this)
     }
 
     @Subscribe(sticky = true)
-    fun onBtn(event: CounterEvents?) {
+    fun onCounterEvents(event: CounterEvents?) {
         if (event!!.getEventType() == "start") {
             startCount(100000)
         } else if (event.getEventType() == "pause") {
@@ -60,6 +70,14 @@ class TimerService: Service() {
         } else if (event.getEventType() == "cancel") {
             cancelCounter()
         }
+    }
+
+    @Subscribe
+    fun onNetworkEvent(event: NetworkEvent) {
+        if (event.getStatus() == "connected") {
+            Toast.makeText(applicationContext, "connected", Toast.LENGTH_SHORT).show()
+        } else if (event.getStatus() == "disconnected") {
+            Toast.makeText(applicationContext, "disconnected", Toast.LENGTH_SHORT).show()        }
     }
 
     @SuppressLint("UnspecifiedImmutableFlag")

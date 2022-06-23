@@ -5,10 +5,15 @@ import android.os.Bundle
 import android.view.View
 import android.widget.Button
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Observer
 import com.ctrlroom.myapplication.events.CounterEvents
 import com.ctrlroom.myapplication.events.MessageEvent
-import com.ctrlroom.myapplication.service.TimerService
+import com.ctrlroom.myapplication.events.NetworkEvent
+import com.ctrlroom.myapplication.services.TimerService
+import com.ctrlroom.myapplication.utils.NetworkConnectionLiveData
+import com.ctrlroom.myapplication.utils.Pref
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
@@ -19,6 +24,7 @@ class MainActivity : AppCompatActivity() {
     private var btn_startStop: Button? =null
     private var btn_pauseResume: Button ? = null
     private var eventBus: EventBus? = null
+    private var btn: Button? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -26,8 +32,23 @@ class MainActivity : AppCompatActivity() {
         textv = findViewById<TextView>(R.id.text_timer) as TextView
         btn_startStop = findViewById(R.id.btn_start_stop)
         btn_pauseResume = findViewById(R.id.btn_pause_resume)
+        btn = findViewById(R.id.btn_next)
 
         eventBus = EventBus.getDefault()
+
+        btn!!.setOnClickListener {
+            startActivity(Intent(this@MainActivity, SecondActivity::class.java))
+        }
+
+        NetworkConnectionLiveData(this@MainActivity)
+            .observe(this@MainActivity, Observer { isConnected ->
+                if (!isConnected) {
+                    EventBus.getDefault().post(NetworkEvent("disconnected"))
+                    return@Observer
+                } else {
+                    EventBus.getDefault().post(NetworkEvent("connected"))
+                }
+            })
 
         if (Pref.getString(this@MainActivity, "ssb", "stopped") == "stopped") {
             textv!!.text = "00:00:00"

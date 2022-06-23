@@ -1,4 +1,4 @@
-package com.ctrlroom.myapplication
+package com.ctrlroom.myapplication.utils
 
 import android.annotation.SuppressLint
 import android.content.Context
